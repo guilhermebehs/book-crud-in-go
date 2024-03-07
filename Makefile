@@ -3,3 +3,7 @@ build:
 
 run: build
 	@./app   
+
+test:
+	@go test -v ./...
+

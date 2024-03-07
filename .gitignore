@@ -1,0 +1,17 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Dependency directories
+/vendor/
+/go.sum
+
+# Testing binaries and coverage reports
+/test/
+*.cover
+*.profile
+
+# Environment variables file
+.env
