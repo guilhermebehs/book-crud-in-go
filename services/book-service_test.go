@@ -26,11 +26,10 @@ func (m *BookRepositoryMock) Create(book entities.Book) error {
 	return m.Called(book).Error(0)
 }
 
-func (m *BookRepositoryMock) GetByIsbn(isbn string) (*entities.Book, error) {
+func (m *BookRepositoryMock) GetByIsbn(isbn string) (entities.Book, error) {
 
-	m.Called(isbn)
-	book := generateSomeBook()
-	return &book, nil
+	result := m.Called(isbn)
+	return result.Get(0).(entities.Book), result.Error(1)
 }
 
 func (m *BookRepositoryMock) List() ([]entities.Book, error) {
@@ -39,12 +38,12 @@ func (m *BookRepositoryMock) List() ([]entities.Book, error) {
 	return []entities.Book{book}, nil
 }
 
-func (m *BookRepositoryMock) Update(book *entities.Book) error {
+func (m *BookRepositoryMock) Update(book entities.Book) error {
 	m.Called(book)
 	return nil
 }
 
-func (m *BookRepositoryMock) Delete(book *entities.Book) error {
+func (m *BookRepositoryMock) Delete(book entities.Book) error {
 	m.Called(book)
 	return nil
 }
@@ -120,5 +119,48 @@ func TestCreateBook(t *testing.T) {
 		assert.Equal(t, "Internal Error", result.Msg)
 		repoMock.AssertNumberOfCalls(t, "Create", 1)
 		repoMock.AssertCalled(t, "Create", book)
+	})
+}
+
+func TestGetByIsbn(t *testing.T) {
+	t.Run("should get a book by ISBN successfully", func(t *testing.T) {
+		book := generateSomeBook()
+		someIsbn := "some ISBN"
+		repoMock := BookRepositoryMock{}
+		repoMock.Mock.On("GetByIsbn", someIsbn).Return(book, nil)
+		service := CreateService(&repoMock)
+		result := service.GetByIsbn(someIsbn)
+		assert.Equal(t, 200, result.StatusCode)
+		assert.Equal(t, book.Isbn, result.Msg.(entities.Book).Isbn)
+		assert.Equal(t, book.Author, result.Msg.(entities.Book).Author)
+		assert.Equal(t, book.Year, result.Msg.(entities.Book).Year)
+		assert.Equal(t, book.Title, result.Msg.(entities.Book).Title)
+		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
+		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
+
+	})
+
+	t.Run("should return a error when book is not found", func(t *testing.T) {
+		someIsbn := "some ISBN"
+		repoMock := BookRepositoryMock{}
+		repoMock.Mock.On("GetByIsbn", someIsbn).Return(entities.Book{}, errors.New("not found"))
+		service := CreateService(&repoMock)
+		result := service.GetByIsbn(someIsbn)
+		assert.Equal(t, 404, result.StatusCode)
+		assert.Equal(t, "Not Found", result.Msg)
+		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
+		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
+	})
+
+	t.Run("should return a error when repository returns a error", func(t *testing.T) {
+		someIsbn := "some ISBN"
+		repoMock := BookRepositoryMock{}
+		repoMock.Mock.On("GetByIsbn", someIsbn).Return(entities.Book{}, errors.New("some error"))
+		service := CreateService(&repoMock)
+		result := service.GetByIsbn(someIsbn)
+		assert.Equal(t, 500, result.StatusCode)
+		assert.Equal(t, "Internal Error", result.Msg)
+		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
+		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
 	})
 }
