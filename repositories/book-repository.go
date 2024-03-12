@@ -81,5 +81,37 @@ func (br *BookRepository) Create(book entities.Book) error {
 	} else {
 		return nil
 	}
+}
 
+func (br *BookRepository) List() ([]entities.Book, error) {
+	rows, err := br.db.Query("SELECT isbn, title, year, author FROM book")
+	if err != nil {
+		return []entities.Book{}, err
+	}
+
+	books := []entities.Book{}
+	for rows.Next() {
+		book := entities.Book{}
+		rows.Scan(&book.Isbn, &book.Title, &book.Year, &book.Author)
+		books = append(books, book)
+	}
+	return books, nil
+}
+
+func (br *BookRepository) Update(book entities.Book) error {
+	_, err := br.db.Query("UPDATE book SET title=$1, year=$2, author=$3 WHERE isbn=$4", book.Title, book.Year, book.Author, book.Isbn)
+	if err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
+func (br *BookRepository) Delete(book entities.Book) error {
+	_, err := br.db.Query("DELETE FROM book WHERE isbn=$1", book.Isbn)
+	if err != nil {
+		return err
+	} else {
+		return nil
+	}
 }
