@@ -259,7 +259,7 @@ func TestUpdate(t *testing.T) {
 			Year:   book.Year,
 			Author: book.Author,
 		}
-		updateDto := UpdateBookDto{
+		updateDto := entities.UpdateBookDto{
 			Title: "new title",
 		}
 		repoMock := BookRepositoryMock{}
@@ -285,7 +285,7 @@ func TestUpdate(t *testing.T) {
 			Year:   "new year",
 			Author: book.Author,
 		}
-		updateDto := UpdateBookDto{
+		updateDto := entities.UpdateBookDto{
 			Year: "new year",
 		}
 		repoMock := BookRepositoryMock{}
@@ -311,7 +311,7 @@ func TestUpdate(t *testing.T) {
 			Year:   book.Year,
 			Author: "new author",
 		}
-		updateDto := UpdateBookDto{
+		updateDto := entities.UpdateBookDto{
 			Author: "new author",
 		}
 		repoMock := BookRepositoryMock{}
@@ -336,7 +336,7 @@ func TestUpdate(t *testing.T) {
 			Year:   book.Year,
 			Author: "new author",
 		}
-		updateDto := UpdateBookDto{
+		updateDto := entities.UpdateBookDto{
 			Author: "new author",
 		}
 		repoMock := BookRepositoryMock{}
@@ -361,7 +361,7 @@ func TestUpdate(t *testing.T) {
 			Year:   book.Year,
 			Author: "new author",
 		}
-		updateDto := UpdateBookDto{
+		updateDto := entities.UpdateBookDto{
 			Author: "new author",
 		}
 		repoMock := BookRepositoryMock{}

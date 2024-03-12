@@ -11,12 +11,6 @@ type bookService struct {
 	bookRepository interfaces.BookRepository
 }
 
-type UpdateBookDto struct {
-	Title  string
-	Year   string
-	Author string
-}
-
 func (b bookService) Create(book entities.Book) entities.HttpResponse {
 	if book.Author == "" || book.Isbn == "" || book.Title == "" || book.Year == "" {
 		return entities.HttpResponse{
@@ -97,7 +91,7 @@ func (b bookService) DeleteByISBN(isbn string) entities.HttpResponse {
 	}
 }
 
-func (b bookService) UpdateByISBN(isbn string, updateDto UpdateBookDto) entities.HttpResponse {
+func (b bookService) UpdateByISBN(isbn string, updateDto entities.UpdateBookDto) entities.HttpResponse {
 
 	book, getErr := b.bookRepository.GetByIsbn(isbn)
 	if getErr != nil {
@@ -133,7 +127,7 @@ func (b bookService) UpdateByISBN(isbn string, updateDto UpdateBookDto) entities
 	}
 }
 
-func CreateService(bookRepository interfaces.BookRepository) bookService {
+func CreateService(bookRepository interfaces.BookRepository) interfaces.BookService {
 	bookService := bookService{
 		bookRepository: bookRepository,
 	}

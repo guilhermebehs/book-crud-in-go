@@ -9,3 +9,11 @@ type BookRepository interface {
 	Update(entities.Book) error
 	Delete(entities.Book) error
 }
+
+type BookService interface {
+	GetByIsbn(isbn string) entities.HttpResponse
+	List() entities.HttpResponse
+	Create(entities.Book) entities.HttpResponse
+	UpdateByISBN(string, entities.UpdateBookDto) entities.HttpResponse
+	DeleteByISBN(string) entities.HttpResponse
+}

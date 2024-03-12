@@ -23,3 +23,9 @@ type HttpResponse struct {
 	StatusCode int
 	Msg        any
 }
+
+type UpdateBookDto struct {
+	Title  string
+	Year   string
+	Author string
+}
