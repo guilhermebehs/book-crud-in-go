@@ -14,6 +14,8 @@ type BookController struct {
 	bookService interfaces.BookService
 }
 
+type HTPPHandleFunc func(http.ResponseWriter, *http.Request)
+
 func sendAsJSON(w http.ResponseWriter, response entities.HttpResponse) {
 	jsonData, err := json.Marshal(response)
 	if err != nil {
@@ -23,11 +25,19 @@ func sendAsJSON(w http.ResponseWriter, response entities.HttpResponse) {
 	}
 }
 
+func withJWT(f HTPPHandleFunc) HTPPHandleFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Validating JWT")
+		f(w, r)
+	}
+
+}
+
 func (bc BookController) StartServer(port string) {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/books", bc.list).Methods("GET")
-	router.HandleFunc("/books", bc.create).Methods("POST")
+	router.HandleFunc("/books", withJWT(bc.list)).Methods("GET")
+	router.HandleFunc("/books", withJWT(bc.create)).Methods("POST")
 
 	fmt.Println("Server listening on port 8080...")
 	http.ListenAndServe(":"+port, router)
