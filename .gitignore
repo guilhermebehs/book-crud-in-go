@@ -15,3 +15,6 @@
 
 # Environment variables file
 .env
+
+# Built artifacts
+/bin/*

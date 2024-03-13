@@ -51,13 +51,16 @@ func TestCreateBook(t *testing.T) {
 	t.Run("should create a book successfully", func(t *testing.T) {
 		book := generateSomeBook()
 		repoMock := BookRepositoryMock{}
+		repoMock.Mock.On("GetByIsbn", book.Isbn).Return(entities.Book{}, errors.New("not found"))
 		repoMock.Mock.On("Create", book).Return(nil)
 		service := CreateService(&repoMock)
 		result := service.Create(book)
 		assert.Equal(t, 201, result.StatusCode)
-		assert.Equal(t, nil, result.Msg)
+		assert.Equal(t, nil, result.Data)
 		repoMock.AssertNumberOfCalls(t, "Create", 1)
 		repoMock.AssertCalled(t, "Create", book)
+		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
+		repoMock.AssertCalled(t, "GetByIsbn", book.Isbn)
 	})
 
 	t.Run("should return error when author is empty", func(t *testing.T) {
@@ -65,11 +68,13 @@ func TestCreateBook(t *testing.T) {
 		book.Author = ""
 		repoMock := BookRepositoryMock{}
 		repoMock.Mock.On("Create", book).Return(nil)
+		repoMock.Mock.On("GetByIsbn", book.Isbn).Return(entities.Book{}, errors.New("not found"))
 		service := CreateService(&repoMock)
 		result := service.Create(book)
 		assert.Equal(t, 400, result.StatusCode)
-		assert.Equal(t, "one or more required fields are empty", result.Msg)
+		assert.Equal(t, "one or more required fields are empty", result.Data)
 		repoMock.AssertNumberOfCalls(t, "Create", 0)
+		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 0)
 	})
 
 	t.Run("should return error when ISBN is empty", func(t *testing.T) {
@@ -77,11 +82,13 @@ func TestCreateBook(t *testing.T) {
 		book.Isbn = ""
 		repoMock := BookRepositoryMock{}
 		repoMock.Mock.On("Create", book).Return(nil)
+		repoMock.Mock.On("GetByIsbn", book.Isbn).Return(entities.Book{}, errors.New("not found"))
 		service := CreateService(&repoMock)
 		result := service.Create(book)
 		assert.Equal(t, 400, result.StatusCode)
-		assert.Equal(t, "one or more required fields are empty", result.Msg)
+		assert.Equal(t, "one or more required fields are empty", result.Data)
 		repoMock.AssertNumberOfCalls(t, "Create", 0)
+		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 0)
 	})
 
 	t.Run("should return error when title is empty", func(t *testing.T) {
@@ -89,11 +96,13 @@ func TestCreateBook(t *testing.T) {
 		book.Title = ""
 		repoMock := BookRepositoryMock{}
 		repoMock.Mock.On("Create", book).Return(nil)
+		repoMock.Mock.On("GetByIsbn", book.Isbn).Return(entities.Book{}, errors.New("not found"))
 		service := CreateService(&repoMock)
 		result := service.Create(book)
 		assert.Equal(t, 400, result.StatusCode)
-		assert.Equal(t, "one or more required fields are empty", result.Msg)
+		assert.Equal(t, "one or more required fields are empty", result.Data)
 		repoMock.AssertNumberOfCalls(t, "Create", 0)
+		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 0)
 	})
 
 	t.Run("should return error when year is empty", func(t *testing.T) {
@@ -101,23 +110,57 @@ func TestCreateBook(t *testing.T) {
 		book.Year = ""
 		repoMock := BookRepositoryMock{}
 		repoMock.Mock.On("Create", book).Return(nil)
+		repoMock.Mock.On("GetByIsbn", book.Isbn).Return(entities.Book{}, errors.New("not found"))
 		service := CreateService(&repoMock)
 		result := service.Create(book)
 		assert.Equal(t, 400, result.StatusCode)
-		assert.Equal(t, "one or more required fields are empty", result.Msg)
+		assert.Equal(t, "one or more required fields are empty", result.Data)
 		repoMock.AssertNumberOfCalls(t, "Create", 0)
+		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 0)
+	})
+
+	t.Run("should return error when book with ISBN already exists", func(t *testing.T) {
+		book := generateSomeBook()
+		repoMock := BookRepositoryMock{}
+		repoMock.Mock.On("Create", book).Return(nil)
+		repoMock.Mock.On("GetByIsbn", book.Isbn).Return(book, nil)
+		service := CreateService(&repoMock)
+		result := service.Create(book)
+		assert.Equal(t, 400, result.StatusCode)
+		assert.Equal(t, "Book with this ISBN already exists", result.Data)
+		repoMock.AssertNumberOfCalls(t, "Create", 0)
+		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
+		repoMock.AssertCalled(t, "GetByIsbn", book.Isbn)
+	})
+
+	t.Run("should return error when get by ISBN retuns an error", func(t *testing.T) {
+		book := generateSomeBook()
+		repoMock := BookRepositoryMock{}
+		repoMock.Mock.On("Create", book).Return(nil)
+		repoMock.Mock.On("GetByIsbn", book.Isbn).Return(entities.Book{}, errors.New("some error"))
+		service := CreateService(&repoMock)
+		result := service.Create(book)
+		assert.Equal(t, 500, result.StatusCode)
+		assert.Equal(t, "Internal Error", result.Data)
+		repoMock.AssertNumberOfCalls(t, "Create", 0)
+		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
+		repoMock.AssertCalled(t, "GetByIsbn", book.Isbn)
 	})
 
 	t.Run("should return error when repository returns an error", func(t *testing.T) {
 		book := generateSomeBook()
 		repoMock := BookRepositoryMock{}
 		repoMock.Mock.On("Create", book).Return(errors.New("some error"))
+		repoMock.Mock.On("GetByIsbn", book.Isbn).Return(entities.Book{}, errors.New("not found"))
 		service := CreateService(&repoMock)
 		result := service.Create(book)
 		assert.Equal(t, 500, result.StatusCode)
-		assert.Equal(t, "Internal Error", result.Msg)
+		assert.Equal(t, "Internal Error", result.Data)
 		repoMock.AssertNumberOfCalls(t, "Create", 1)
 		repoMock.AssertCalled(t, "Create", book)
+		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
+		repoMock.AssertCalled(t, "GetByIsbn", book.Isbn)
+
 	})
 }
 
@@ -130,10 +173,10 @@ func TestGetByIsbn(t *testing.T) {
 		service := CreateService(&repoMock)
 		result := service.GetByIsbn(someIsbn)
 		assert.Equal(t, 200, result.StatusCode)
-		assert.Equal(t, book.Isbn, result.Msg.(entities.Book).Isbn)
-		assert.Equal(t, book.Author, result.Msg.(entities.Book).Author)
-		assert.Equal(t, book.Year, result.Msg.(entities.Book).Year)
-		assert.Equal(t, book.Title, result.Msg.(entities.Book).Title)
+		assert.Equal(t, book.Isbn, result.Data.(entities.Book).Isbn)
+		assert.Equal(t, book.Author, result.Data.(entities.Book).Author)
+		assert.Equal(t, book.Year, result.Data.(entities.Book).Year)
+		assert.Equal(t, book.Title, result.Data.(entities.Book).Title)
 		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
 		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
 
@@ -146,7 +189,7 @@ func TestGetByIsbn(t *testing.T) {
 		service := CreateService(&repoMock)
 		result := service.GetByIsbn(someIsbn)
 		assert.Equal(t, 404, result.StatusCode)
-		assert.Equal(t, "Not Found", result.Msg)
+		assert.Equal(t, "Not Found", result.Data)
 		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
 		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
 	})
@@ -158,7 +201,7 @@ func TestGetByIsbn(t *testing.T) {
 		service := CreateService(&repoMock)
 		result := service.GetByIsbn(someIsbn)
 		assert.Equal(t, 500, result.StatusCode)
-		assert.Equal(t, "Internal Error", result.Msg)
+		assert.Equal(t, "Internal Error", result.Data)
 		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
 		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
 	})
@@ -172,11 +215,11 @@ func TestList(t *testing.T) {
 		service := CreateService(&repoMock)
 		result := service.List()
 		assert.Equal(t, 200, result.StatusCode)
-		assert.Equal(t, len(books), len(result.Msg.([]entities.Book)))
-		assert.Equal(t, books[0].Isbn, result.Msg.([]entities.Book)[0].Isbn)
-		assert.Equal(t, books[0].Author, result.Msg.([]entities.Book)[0].Author)
-		assert.Equal(t, books[0].Year, result.Msg.([]entities.Book)[0].Year)
-		assert.Equal(t, books[0].Title, result.Msg.([]entities.Book)[0].Title)
+		assert.Equal(t, len(books), len(result.Data.([]entities.Book)))
+		assert.Equal(t, books[0].Isbn, result.Data.([]entities.Book)[0].Isbn)
+		assert.Equal(t, books[0].Author, result.Data.([]entities.Book)[0].Author)
+		assert.Equal(t, books[0].Year, result.Data.([]entities.Book)[0].Year)
+		assert.Equal(t, books[0].Title, result.Data.([]entities.Book)[0].Title)
 		repoMock.AssertNumberOfCalls(t, "List", 1)
 		repoMock.AssertCalled(t, "List")
 
@@ -189,7 +232,7 @@ func TestList(t *testing.T) {
 		service := CreateService(&repoMock)
 		result := service.List()
 		assert.Equal(t, 500, result.StatusCode)
-		assert.Equal(t, "Internal Error", result.Msg)
+		assert.Equal(t, "Internal Error", result.Data)
 		repoMock.AssertNumberOfCalls(t, "List", 1)
 		repoMock.AssertCalled(t, "List")
 
@@ -207,7 +250,7 @@ func TestDelete(t *testing.T) {
 		service := CreateService(&repoMock)
 		result := service.DeleteByISBN(someIsbn)
 		assert.Equal(t, 204, result.StatusCode)
-		assert.Equal(t, nil, result.Msg)
+		assert.Equal(t, nil, result.Data)
 		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
 		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
 		repoMock.AssertNumberOfCalls(t, "Delete", 1)
@@ -224,7 +267,7 @@ func TestDelete(t *testing.T) {
 		service := CreateService(&repoMock)
 		result := service.DeleteByISBN(someIsbn)
 		assert.Equal(t, 500, result.StatusCode)
-		assert.Equal(t, "Internal Error", result.Msg)
+		assert.Equal(t, "Internal Error", result.Data)
 		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
 		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
 		repoMock.AssertNumberOfCalls(t, "Delete", 1)
@@ -240,7 +283,7 @@ func TestDelete(t *testing.T) {
 		service := CreateService(&repoMock)
 		result := service.DeleteByISBN(someIsbn)
 		assert.Equal(t, 404, result.StatusCode)
-		assert.Equal(t, "Not Found", result.Msg)
+		assert.Equal(t, "Not Found", result.Data)
 		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
 		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
 		repoMock.AssertNumberOfCalls(t, "Delete", 0)
@@ -269,7 +312,7 @@ func TestUpdate(t *testing.T) {
 		service := CreateService(&repoMock)
 		result := service.UpdateByISBN(someIsbn, updateDto)
 		assert.Equal(t, 204, result.StatusCode)
-		assert.Equal(t, nil, result.Msg)
+		assert.Equal(t, nil, result.Data)
 		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
 		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
 		repoMock.AssertNumberOfCalls(t, "Update", 1)
@@ -295,7 +338,7 @@ func TestUpdate(t *testing.T) {
 		service := CreateService(&repoMock)
 		result := service.UpdateByISBN(someIsbn, updateDto)
 		assert.Equal(t, 204, result.StatusCode)
-		assert.Equal(t, nil, result.Msg)
+		assert.Equal(t, nil, result.Data)
 		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
 		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
 		repoMock.AssertNumberOfCalls(t, "Update", 1)
@@ -321,7 +364,7 @@ func TestUpdate(t *testing.T) {
 		service := CreateService(&repoMock)
 		result := service.UpdateByISBN(someIsbn, updateDto)
 		assert.Equal(t, 204, result.StatusCode)
-		assert.Equal(t, nil, result.Msg)
+		assert.Equal(t, nil, result.Data)
 		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
 		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
 		repoMock.AssertNumberOfCalls(t, "Update", 1)
@@ -346,7 +389,7 @@ func TestUpdate(t *testing.T) {
 		service := CreateService(&repoMock)
 		result := service.UpdateByISBN(someIsbn, updateDto)
 		assert.Equal(t, 404, result.StatusCode)
-		assert.Equal(t, "Not Found", result.Msg)
+		assert.Equal(t, "Not Found", result.Data)
 		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
 		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
 		repoMock.AssertNumberOfCalls(t, "Update", 0)
@@ -371,7 +414,7 @@ func TestUpdate(t *testing.T) {
 		service := CreateService(&repoMock)
 		result := service.UpdateByISBN(someIsbn, updateDto)
 		assert.Equal(t, 500, result.StatusCode)
-		assert.Equal(t, "Internal Error", result.Msg)
+		assert.Equal(t, "Internal Error", result.Data)
 		repoMock.AssertNumberOfCalls(t, "GetByIsbn", 1)
 		repoMock.AssertCalled(t, "GetByIsbn", someIsbn)
 		repoMock.AssertNumberOfCalls(t, "Update", 1)

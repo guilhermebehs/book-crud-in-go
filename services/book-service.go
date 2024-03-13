@@ -15,14 +15,28 @@ func (b bookService) Create(book entities.Book) entities.HttpResponse {
 	if book.Author == "" || book.Isbn == "" || book.Title == "" || book.Year == "" {
 		return entities.HttpResponse{
 			StatusCode: 400,
-			Msg:        "one or more required fields are empty",
+			Data:       "one or more required fields are empty",
+		}
+	}
+	_, err := b.bookRepository.GetByIsbn(book.Isbn)
+	if err != nil {
+		if strings.ToLower(err.Error()) != "not found" {
+			return entities.HttpResponse{
+				StatusCode: 500,
+				Data:       "Internal Error",
+			}
+		}
+	} else {
+		return entities.HttpResponse{
+			StatusCode: 400,
+			Data:       "Book with this ISBN already exists",
 		}
 	}
 	repoError := b.bookRepository.Create(book)
 	if repoError != nil {
 		return entities.HttpResponse{
 			StatusCode: 500,
-			Msg:        "Internal Error",
+			Data:       "Internal Error",
 		}
 	}
 	return entities.HttpResponse{
@@ -37,19 +51,19 @@ func (b bookService) GetByIsbn(isbn string) entities.HttpResponse {
 		if strings.ToLower(err.Error()) == "not found" {
 			return entities.HttpResponse{
 				StatusCode: 404,
-				Msg:        "Not Found",
+				Data:       "Not Found",
 			}
 		} else {
 			return entities.HttpResponse{
 				StatusCode: 500,
-				Msg:        "Internal Error",
+				Data:       "Internal Error",
 			}
 		}
 	}
 
 	return entities.HttpResponse{
 		StatusCode: 200,
-		Msg:        book,
+		Data:       book,
 	}
 
 }
@@ -60,12 +74,12 @@ func (b bookService) List() entities.HttpResponse {
 	if err != nil {
 		return entities.HttpResponse{
 			StatusCode: 500,
-			Msg:        "Internal Error",
+			Data:       "Internal Error",
 		}
 	} else {
 		return entities.HttpResponse{
 			StatusCode: 200,
-			Msg:        books,
+			Data:       books,
 		}
 	}
 }
@@ -76,14 +90,14 @@ func (b bookService) DeleteByISBN(isbn string) entities.HttpResponse {
 	if getErr != nil {
 		return entities.HttpResponse{
 			StatusCode: 404,
-			Msg:        "Not Found",
+			Data:       "Not Found",
 		}
 	}
 	deleteErr := b.bookRepository.Delete(book)
 	if deleteErr != nil {
 		return entities.HttpResponse{
 			StatusCode: 500,
-			Msg:        "Internal Error",
+			Data:       "Internal Error",
 		}
 	}
 	return entities.HttpResponse{
@@ -97,7 +111,7 @@ func (b bookService) UpdateByISBN(isbn string, updateDto entities.UpdateBookDto)
 	if getErr != nil {
 		return entities.HttpResponse{
 			StatusCode: 404,
-			Msg:        "Not Found",
+			Data:       "Not Found",
 		}
 	}
 
@@ -118,7 +132,7 @@ func (b bookService) UpdateByISBN(isbn string, updateDto entities.UpdateBookDto)
 	if updateErr != nil {
 		return entities.HttpResponse{
 			StatusCode: 500,
-			Msg:        "Internal Error",
+			Data:       "Internal Error",
 		}
 	}
 

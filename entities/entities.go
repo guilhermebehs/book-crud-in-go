@@ -1,10 +1,10 @@
 package entities
 
 type Book struct {
-	Isbn   string
-	Title  string
-	Year   string
-	Author string
+	Isbn   string `json:"isbn"`
+	Title  string `json:"title"`
+	Year   string `json:"year"`
+	Author string `json:"author"`
 }
 
 func (b *Book) AdjustAuthor(author string) {
@@ -21,7 +21,7 @@ func (b *Book) AdjustTitle(title string) {
 
 type HttpResponse struct {
 	StatusCode int
-	Msg        any
+	Data       any
 }
 
 type UpdateBookDto struct {

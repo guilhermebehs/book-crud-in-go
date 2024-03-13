@@ -1,12 +1,12 @@
 build:
-	@go build -o bins/app
+	@go build -o bin/app
 
 run: build
-	@./app   
+	@./bin/app   
 
 test:
 	@go test -v ./...
 
-test-cover:
+test-cov:
 	@go test -cover -v ./...
 
