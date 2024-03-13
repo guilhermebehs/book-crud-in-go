@@ -14,7 +14,7 @@ type BookController struct {
 	bookService interfaces.BookService
 }
 
-type HTPPHandleFunc func(http.ResponseWriter, *http.Request)
+type HTTPHandleFunc func(http.ResponseWriter, *http.Request)
 
 func sendAsJSON(w http.ResponseWriter, response entities.HttpResponse) {
 	jsonData, err := json.Marshal(response)
@@ -25,7 +25,7 @@ func sendAsJSON(w http.ResponseWriter, response entities.HttpResponse) {
 	}
 }
 
-func withJWT(f HTPPHandleFunc) HTPPHandleFunc {
+func withJWT(f HTTPHandleFunc) HTTPHandleFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Validating JWT")
 		f(w, r)
