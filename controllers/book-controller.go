@@ -38,6 +38,9 @@ func (bc BookController) StartServer(port string) {
 
 	router.HandleFunc("/books", withJWT(bc.list)).Methods("GET")
 	router.HandleFunc("/books", withJWT(bc.create)).Methods("POST")
+	router.HandleFunc("/books/{isbn}", withJWT(bc.getByISBN)).Methods("GET")
+	router.HandleFunc("/books/{isbn}", withJWT(bc.deleteByISBN)).Methods("DELETE")
+	router.HandleFunc("/books/{isbn}", withJWT(bc.updateByISBN)).Methods("PATCH")
 
 	fmt.Println("Server listening on port 8080...")
 	http.ListenAndServe(":"+port, router)
@@ -64,6 +67,37 @@ func (bc BookController) create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(result.StatusCode)
 	sendAsJSON(w, result)
 
+}
+
+func (bc BookController) getByISBN(w http.ResponseWriter, r *http.Request) {
+	isbn := mux.Vars(r)["isbn"]
+	result := bc.bookService.GetByIsbn(isbn)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(result.StatusCode)
+	sendAsJSON(w, result)
+}
+
+func (bc BookController) deleteByISBN(w http.ResponseWriter, r *http.Request) {
+	isbn := mux.Vars(r)["isbn"]
+	result := bc.bookService.DeleteByISBN(isbn)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(result.StatusCode)
+	sendAsJSON(w, result)
+}
+
+func (bc BookController) updateByISBN(w http.ResponseWriter, r *http.Request) {
+	isbn := mux.Vars(r)["isbn"]
+	book := entities.UpdateBookDto{}
+	err := json.NewDecoder(r.Body).Decode(&book)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		sendAsJSON(w, entities.HttpResponse{StatusCode: http.StatusBadRequest, Data: "Invalid JSON"})
+		return
+	}
+	result := bc.bookService.UpdateByISBN(isbn, book)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(result.StatusCode)
+	sendAsJSON(w, result)
 }
 
 func CreateController(bs interfaces.BookService) BookController {
