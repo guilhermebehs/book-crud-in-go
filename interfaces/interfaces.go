@@ -17,3 +17,8 @@ type BookService interface {
 	UpdateByISBN(string, entities.UpdateBookDto) entities.HttpResponse
 	DeleteByISBN(string) entities.HttpResponse
 }
+
+type AuthenticationService interface {
+	Authenticate(username string, password string) (string, error)
+	Validate(token string) bool
+}

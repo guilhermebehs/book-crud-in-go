@@ -11,7 +11,8 @@ import (
 )
 
 type BookController struct {
-	bookService interfaces.BookService
+	bookService           interfaces.BookService
+	authenticationService interfaces.AuthenticationService
 }
 
 type HTTPHandleFunc func(http.ResponseWriter, *http.Request)
@@ -100,8 +101,9 @@ func (bc BookController) updateByISBN(w http.ResponseWriter, r *http.Request) {
 	sendAsJSON(w, result)
 }
 
-func CreateController(bs interfaces.BookService) BookController {
+func CreateController(bs interfaces.BookService, as interfaces.AuthenticationService) BookController {
 	return BookController{
-		bookService: bs,
+		bookService:           bs,
+		authenticationService: as,
 	}
 }

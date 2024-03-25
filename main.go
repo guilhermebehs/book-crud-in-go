@@ -8,7 +8,8 @@ import (
 
 func main() {
 	bookRepository := repositories.CreateRepository()
-	bookService := services.CreateService(bookRepository)
-	bookController := controllers.CreateController(bookService)
+	bookService := services.CreateBookService(bookRepository)
+	authenticationService := services.CreateAuthenticationService()
+	bookController := controllers.CreateController(bookService, authenticationService)
 	bookController.StartServer("8080")
 }

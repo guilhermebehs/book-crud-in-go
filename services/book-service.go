@@ -141,7 +141,7 @@ func (b bookService) UpdateByISBN(isbn string, updateDto entities.UpdateBookDto)
 	}
 }
 
-func CreateService(bookRepository interfaces.BookRepository) interfaces.BookService {
+func CreateBookService(bookRepository interfaces.BookRepository) interfaces.BookService {
 	bookService := bookService{
 		bookRepository: bookRepository,
 	}
