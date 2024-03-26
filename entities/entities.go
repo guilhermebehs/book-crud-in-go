@@ -29,3 +29,8 @@ type UpdateBookDto struct {
 	Year   string
 	Author string
 }
+
+type AuthDto struct {
+	User string `json:"user"`
+	Pass string `json:"pass"`
+}

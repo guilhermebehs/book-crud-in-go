@@ -37,6 +37,7 @@ func withJWT(f HTTPHandleFunc) HTTPHandleFunc {
 func (bc BookController) StartServer(port string) {
 	router := mux.NewRouter()
 
+	router.HandleFunc("/auth", bc.auth).Methods("POST")
 	router.HandleFunc("/books", withJWT(bc.list)).Methods("GET")
 	router.HandleFunc("/books", withJWT(bc.create)).Methods("POST")
 	router.HandleFunc("/books/{isbn}", withJWT(bc.getByISBN)).Methods("GET")
@@ -45,6 +46,26 @@ func (bc BookController) StartServer(port string) {
 
 	fmt.Println("Server listening on port 8080...")
 	http.ListenAndServe(":"+port, router)
+}
+
+func (bc BookController) auth(w http.ResponseWriter, r *http.Request) {
+	auth := entities.AuthDto{}
+	err := json.NewDecoder(r.Body).Decode(&auth)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		sendAsJSON(w, entities.HttpResponse{StatusCode: http.StatusBadRequest, Data: "Invalid JSON"})
+		return
+	}
+	authResult, authErr := bc.authenticationService.Authenticate(auth.User, auth.Pass)
+	if authErr != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		sendAsJSON(w, entities.HttpResponse{StatusCode: http.StatusUnauthorized, Data: "Unauthorized"})
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	sendAsJSON(w, entities.HttpResponse{StatusCode: http.StatusCreated, Data: authResult})
 }
 
 func (bc BookController) list(w http.ResponseWriter, r *http.Request) {

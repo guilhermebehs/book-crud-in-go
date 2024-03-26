@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"os"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/joho/godotenv"
@@ -21,6 +22,9 @@ func (as AuthenticationService) Authenticate(username string, password string) (
 
 	if username == authenticatedUser && password == authenticatedPass {
 		accessToken := jwt.New(jwt.SigningMethodHS256)
+		claims := accessToken.Claims.(jwt.MapClaims)
+		claims["user_id"] = time.Now().Unix()
+		claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
 		token, err := accessToken.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
 		if err != nil {
 			return "", errors.New("internal error")
