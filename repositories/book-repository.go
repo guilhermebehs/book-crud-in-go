@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/guilhermebehs/book-crud-in-go/entities"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -22,15 +21,11 @@ func CreateRepository() *BookRepository {
 }
 
 func connectDb() *sql.DB {
-	dotenvErr := godotenv.Load()
 	host := os.Getenv("DB_HOST")
 	port := os.Getenv("DB_PORT")
 	user := os.Getenv("DB_USER")
 	pass := os.Getenv("DB_PASS")
 	dbName := os.Getenv("DB_NAME")
-	if dotenvErr != nil {
-		panic("Error loading config file: " + dotenvErr.Error())
-	}
 	db, errConn := sql.Open("postgres", "postgresql://"+user+":"+pass+"@"+host+":"+port+"/"+dbName+"?sslmode=disable")
 	if errConn != nil {
 		panic("Error connecting db: " + errConn.Error())
