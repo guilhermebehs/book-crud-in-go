@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/guilhermebehs/book-crud-in-go/entities"
@@ -26,10 +27,27 @@ func sendAsJSON(w http.ResponseWriter, response entities.HttpResponse) {
 	}
 }
 
-func withJWT(f HTTPHandleFunc) HTTPHandleFunc {
+func (bc BookController) withJWT(f HTTPHandleFunc) HTTPHandleFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Validating JWT")
-		f(w, r)
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			sendAsJSON(w, entities.HttpResponse{StatusCode: http.StatusUnauthorized, Data: "Unauthorized"})
+			return
+		}
+		tokenParts := strings.Split(authHeader, " ")
+		if len(tokenParts) != 2 {
+			w.WriteHeader(http.StatusUnauthorized)
+			sendAsJSON(w, entities.HttpResponse{StatusCode: http.StatusUnauthorized, Data: "Unauthorized"})
+			return
+		}
+		token := tokenParts[1]
+		if !bc.authenticationService.Validate(token) {
+			w.WriteHeader(http.StatusUnauthorized)
+			sendAsJSON(w, entities.HttpResponse{StatusCode: http.StatusUnauthorized, Data: "Unauthorized"})
+		} else {
+			f(w, r)
+		}
 	}
 
 }
@@ -38,11 +56,11 @@ func (bc BookController) StartServer(port string) {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/auth", bc.auth).Methods("POST")
-	router.HandleFunc("/books", withJWT(bc.list)).Methods("GET")
-	router.HandleFunc("/books", withJWT(bc.create)).Methods("POST")
-	router.HandleFunc("/books/{isbn}", withJWT(bc.getByISBN)).Methods("GET")
-	router.HandleFunc("/books/{isbn}", withJWT(bc.deleteByISBN)).Methods("DELETE")
-	router.HandleFunc("/books/{isbn}", withJWT(bc.updateByISBN)).Methods("PATCH")
+	router.HandleFunc("/books", bc.withJWT(bc.list)).Methods("GET")
+	router.HandleFunc("/books", bc.withJWT(bc.create)).Methods("POST")
+	router.HandleFunc("/books/{isbn}", bc.withJWT(bc.getByISBN)).Methods("GET")
+	router.HandleFunc("/books/{isbn}", bc.withJWT(bc.deleteByISBN)).Methods("DELETE")
+	router.HandleFunc("/books/{isbn}", bc.withJWT(bc.updateByISBN)).Methods("PATCH")
 
 	fmt.Println("Server listening on port 8080...")
 	http.ListenAndServe(":"+port, router)
