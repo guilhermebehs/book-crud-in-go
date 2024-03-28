@@ -1,8 +1,12 @@
-FROM golang:1.17-alpine AS builder
+FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
-COPY go.mod go.sum Makefile ./
+RUN apk update && apk add make
+
+COPY go.mod Makefile ./
+
+COPY . .
 
 RUN go mod download
 

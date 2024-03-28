@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -15,7 +16,7 @@ func main() {
 
 	dotenvErr := godotenv.Load()
 	if dotenvErr != nil {
-		panic("Error loading config file: " + dotenvErr.Error())
+		fmt.Println("dotenv file not found. Using predefined envs.")
 	}
 	var bookRepository interfaces.BookRepository
 	useMockRepository, err := strconv.ParseBool(os.Getenv("USE_MOCK_REPOSITORY"))
